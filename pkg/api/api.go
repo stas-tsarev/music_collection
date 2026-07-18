@@ -20,12 +20,15 @@ func (api *api) Handles() {
 	api.r.HandleFunc("/api/tracks", api.trackByID).Queries("id", "{id}").Methods(http.MethodGet)
 	api.r.HandleFunc("/api/tracks", api.trackByName).Queries("name", "{name}").Methods(http.MethodGet)
 	api.r.HandleFunc("/api/tracks", api.trackList).Methods(http.MethodGet)
+	api.r.HandleFunc("/api/tracks", api.trackAdd).Methods(http.MethodPost)
 
 	api.r.HandleFunc("/api/albums", api.albumByID).Queries("id", "{id}").Methods(http.MethodGet)
 	api.r.HandleFunc("/api/albums", api.albumByName).Queries("name", "{name}").Methods(http.MethodGet)
 	api.r.HandleFunc("/api/albums", api.albumList).Methods(http.MethodGet)
 
 	api.r.HandleFunc("/api/artists", api.artistByID).Queries("id", "{id}").Methods(http.MethodGet)
+	api.r.HandleFunc("/api/artists", api.artistByName).Queries("name", "{name}").Methods(http.MethodGet)
+	api.r.HandleFunc("/api/artists", api.artistList).Methods(http.MethodGet)
 }
 
 func (api *api) ListenAndServe(address string) error {

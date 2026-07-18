@@ -75,3 +75,56 @@ func (pgrep *PGRepository) GetArtistByID(ArtistID int) (models.ArtistFull, error
 	}
 	return fullartist, nil
 }
+
+func (pgrep *PGRepository) GetArtists() ([]models.ArtistFull, error) {
+	var result []models.ArtistFull
+
+	ids, err := pgrep.pgxPool.Query(context.Background(), `
+		SELECT artist_id FROM artists
+	`)
+	if err != nil {
+		return []models.ArtistFull{}, errors.New("not found the artist")
+	}
+
+	for ids.Next() {
+		var artist_id int
+		err = ids.Scan(&artist_id)
+		if err != nil {
+			return []models.ArtistFull{}, err
+		}
+		tmp, err := pgrep.GetArtistByID(artist_id)
+		if err != nil {
+			return []models.ArtistFull{}, err
+		}
+		result = append(result, tmp)
+	}
+
+	return result, nil
+}
+
+func (pgrep *PGRepository) GetArtistsByName(artistName string) ([]models.ArtistFull, error) {
+	var result []models.ArtistFull
+
+	ids, err := pgrep.pgxPool.Query(context.Background(), `
+		SELECT artist_id FROM artists
+		WHERE LOWER(artist_name) = LOWER($1);
+	`, artistName)
+	if err != nil {
+		return []models.ArtistFull{}, errors.New("not found the artist")
+	}
+
+	for ids.Next() {
+		var artist_id int
+		err = ids.Scan(&artist_id)
+		if err != nil {
+			return []models.ArtistFull{}, err
+		}
+		tmp, err := pgrep.GetArtistByID(artist_id)
+		if err != nil {
+			return []models.ArtistFull{}, err
+		}
+		result = append(result, tmp)
+	}
+
+	return result, nil
+}

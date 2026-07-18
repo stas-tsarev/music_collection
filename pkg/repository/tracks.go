@@ -129,3 +129,14 @@ func (pgrep *PGRepository) GetTracksByName(trackName string) ([]models.TrackFull
 
 	return result, nil
 }
+
+func (pgrep *PGRepository) CreateTrack(fulltrack models.TrackFull) error {
+	pgrep.mu.Lock()
+	defer pgrep.mu.Unlock()
+
+	_, err := pgrep.pgxPool.Exec(context.Background(), `
+		INSERT INTO tracks (track_name)
+		VALUES ($1);
+	`, fulltrack.TrackName)
+	return err
+}

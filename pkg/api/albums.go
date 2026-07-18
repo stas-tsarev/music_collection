@@ -8,15 +8,15 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func (api *api) trackByID(w http.ResponseWriter, r *http.Request) {
+func (api *api) albumByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	track_id, err := strconv.Atoi(vars["id"])
+	album_id, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	data, err := api.pgdatabase.GetTrackByID(track_id)
+	data, err := api.pgdatabase.GetAlbumByID(album_id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -29,8 +29,8 @@ func (api *api) trackByID(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (api *api) trackList(w http.ResponseWriter, r *http.Request) {
-	data, err := api.pgdatabase.GetTracks()
+func (api *api) albumList(w http.ResponseWriter, r *http.Request) {
+	data, err := api.pgdatabase.GetAlbums()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -43,11 +43,11 @@ func (api *api) trackList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (api *api) trackByName(w http.ResponseWriter, r *http.Request) {
+func (api *api) albumByName(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	trackName := vars["name"]
+	albumName := vars["name"]
 
-	data, err := api.pgdatabase.GetTracksByName(trackName)
+	data, err := api.pgdatabase.GetAlbumsByName(albumName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return

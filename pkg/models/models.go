@@ -22,3 +22,18 @@ type TrackFull struct {
 	Artists   []string `json:"artists_name"`
 	Albums    []string `json:"albums_name"`
 }
+
+type AlbumFull struct {
+	AlbumID   int      `json:"album_id"`
+	AlbumName string   `json:"album_name"`
+	Release   int      `json:"release_year"`
+	Tracks    []string `json:"tracks_name"`
+	Artists   []string `json:"artists_name"`
+}
+
+type ArtistFull struct {
+	ArtistID   int      `json:"artist_id"`
+	ArtistName string   `json:"artist_name"`
+	Albums     []string `json:"albums_name"`
+	Tracks     []string `json:"tracks_name"`
+}

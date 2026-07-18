@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"pr_1_music_collection/pkg/models"
 )
 
@@ -12,12 +13,13 @@ func (pgrep *PGRepository) GetTrackByID(trackID int) (models.TrackFull, error) {
 		SELECT * FROM tracks
 		WHERE track_id = $1
 	`, trackID)
+
 	err := tr.Scan(
 		&track.TrackID,
 		&track.TrackName,
 	)
 	if err != nil {
-		return models.TrackFull{}, err
+		return models.TrackFull{}, errors.New("not found the track")
 	}
 	fulltrack.TrackID = track.TrackID
 	fulltrack.TrackName = track.TrackName
@@ -44,7 +46,7 @@ func (pgrep *PGRepository) GetTrackByID(trackID int) (models.TrackFull, error) {
 		fulltrack.Artists = append(fulltrack.Artists, artists[i].ArtistName)
 	}
 	if len(fulltrack.Artists) == 0 {
-		fulltrack.Artists = append(fulltrack.Artists, "Неизвестный исполнитель")
+		fulltrack.Artists = append(fulltrack.Artists, "Неизвестный Исполнитель")
 	}
 
 	var albums []models.Album
@@ -69,7 +71,7 @@ func (pgrep *PGRepository) GetTrackByID(trackID int) (models.TrackFull, error) {
 		fulltrack.Albums = append(fulltrack.Albums, albums[i].AlbumName)
 	}
 	if len(fulltrack.Albums) == 0 {
-		fulltrack.Albums = append(fulltrack.Albums, "Неизвестный альбом")
+		fulltrack.Albums = append(fulltrack.Albums, "Неизвестный Альбом")
 	}
 
 	return fulltrack, nil
@@ -82,7 +84,34 @@ func (pgrep *PGRepository) GetTracks() ([]models.TrackFull, error) {
 		SELECT track_id FROM tracks
 	`)
 	if err != nil {
-		return []models.TrackFull{}, err
+		return []models.TrackFull{}, errors.New("not found the track")
+	}
+
+	for ids.Next() {
+		var track_id int
+		err = ids.Scan(&track_id)
+		if err != nil {
+			return []models.TrackFull{}, err
+		}
+		tmp, err := pgrep.GetTrackByID(track_id)
+		if err != nil {
+			return []models.TrackFull{}, err
+		}
+		result = append(result, tmp)
+	}
+
+	return result, nil
+}
+
+func (pgrep *PGRepository) GetTracksByName(trackName string) ([]models.TrackFull, error) {
+	var result []models.TrackFull
+
+	ids, err := pgrep.pgxPool.Query(context.Background(), `
+		SELECT track_id FROM tracks
+		WHERE LOWER(track_name) = LOWER($1);
+	`, trackName)
+	if err != nil {
+		return []models.TrackFull{}, errors.New("not found the track")
 	}
 
 	for ids.Next() {

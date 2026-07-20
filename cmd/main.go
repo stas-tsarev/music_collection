@@ -9,7 +9,7 @@ import (
 )
 
 const addr = "localhost:8080"
-const conn = "postgres://postgres:s2t0a0s3@localhost:5432/music"
+const conn = "..."
 
 func main() {
 	db, err := repository.NewPGRepository(conn)

@@ -130,13 +130,18 @@ func (pgrep *PGRepository) GetTracksByName(trackName string) ([]models.TrackFull
 	return result, nil
 }
 
-func (pgrep *PGRepository) CreateTrack(fulltrack models.TrackFull) error {
+func (pgrep *PGRepository) CreateTrack(track models.Track) error {
 	pgrep.mu.Lock()
 	defer pgrep.mu.Unlock()
 
 	_, err := pgrep.pgxPool.Exec(context.Background(), `
 		INSERT INTO tracks (track_name)
 		VALUES ($1);
-	`, fulltrack.TrackName)
-	return err
+	`, track.TrackName)
+
+	if err != nil {
+		return errors.New("cannot insert the track")
+	}
+
+	return nil
 }

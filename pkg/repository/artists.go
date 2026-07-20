@@ -128,3 +128,103 @@ func (pgrep *PGRepository) GetArtistsByName(artistName string) ([]models.ArtistF
 
 	return result, nil
 }
+
+func (pgrep *PGRepository) CreateArtist(artist models.Artist) error {
+	_, err := pgrep.pgxPool.Exec(context.Background(), `
+		INSERT INTO artists(artist_name)
+		VALUES ($1)
+	`, artist.ArtistName)
+
+	if err != nil {
+		return errors.New("cannot insert the artist")
+	}
+
+	return nil
+}
+
+func (pgrep *PGRepository) AddAlbumToArtist(albumArtist models.AlbumArtist) error {
+	req, _ := pgrep.pgxPool.Query(context.Background(), `
+		SELECT * FROM album_artist
+		WHERE album_id = $1 AND artist_id = $2
+	`, albumArtist.AlbumID, albumArtist.ArtistID)
+
+	tmp := 0
+	for req.Next() {
+		tmp++
+	}
+
+	if tmp == 0 {
+		_, err := pgrep.pgxPool.Exec(context.Background(), `
+		INSERT INTO album_artist(album_id, artist_id)
+		VALUES ($1, $2)
+	`, albumArtist.AlbumID, albumArtist.ArtistID)
+
+		if err != nil {
+			return errors.New("cannot add album to artist")
+		}
+	}
+
+	req, _ = pgrep.pgxPool.Query(context.Background(), `
+		SELECT track_id FROM track_album WHERE album_id = $1;
+	`, albumArtist.AlbumID)
+
+	var trackIDS []int
+	for req.Next() {
+		var trackID int
+		err := req.Scan(&trackID)
+		if err != nil {
+			return errors.New("cannot get track ids from album")
+		}
+		trackIDS = append(trackIDS, trackID)
+	}
+
+	for _, trackID := range trackIDS {
+		req, _ = pgrep.pgxPool.Query(context.Background(), `
+			SELECT * FROM track_artist
+			WHERE track_id = $1 AND artist_id = $2
+		`, trackID, albumArtist.ArtistID)
+
+		tmp = 0
+		for req.Next() {
+			tmp++
+		}
+
+		if tmp == 0 {
+			_, err := pgrep.pgxPool.Exec(context.Background(), `
+				INSERT INTO track_artist(track_id, artist_id)
+				VALUES ($1, $2)
+			`, trackID, albumArtist.ArtistID)
+
+			if err != nil {
+				return errors.New("cannot add track to artist")
+			}
+		}
+	}
+
+	return nil
+}
+
+func (pgrep *PGRepository) AddTrackToArtist(trackArtist models.TrackArtist) error {
+	req, _ := pgrep.pgxPool.Query(context.Background(), `
+			SELECT * FROM track_artist
+			WHERE track_id = $1 AND artist_id = $2
+		`, trackArtist.TrackID, trackArtist.ArtistID)
+
+	tmp := 0
+	for req.Next() {
+		tmp++
+	}
+
+	if tmp == 0 {
+		_, err := pgrep.pgxPool.Exec(context.Background(), `
+				INSERT INTO track_artist(track_id, artist_id)
+				VALUES ($1, $2)
+			`, trackArtist.TrackID, trackArtist.ArtistID)
+
+		if err != nil {
+			return errors.New("cannot add track to artist")
+		}
+	}
+
+	return nil
+}

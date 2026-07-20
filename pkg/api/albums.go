@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"pr_1_music_collection/pkg/models"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -54,6 +55,36 @@ func (api *api) albumByName(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = json.NewEncoder(w).Encode(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (api *api) albumAdd(w http.ResponseWriter, r *http.Request) {
+	var album models.Album
+	err := json.NewDecoder(r.Body).Decode(&album)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.CreateAlbum(album)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (api *api) albumAddTrack(w http.ResponseWriter, r *http.Request) {
+	var trackAlbum models.TrackAlbum
+	err := json.NewDecoder(r.Body).Decode(&trackAlbum)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.AddTrackInAlbum(trackAlbum)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

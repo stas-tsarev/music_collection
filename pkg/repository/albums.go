@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"pr_1_music_collection/pkg/models"
+	"time"
 )
 
 func (pgrep *PGRepository) GetAlbumByID(AlbumID int) (models.AlbumFull, error) {
@@ -130,4 +131,46 @@ func (pgrep *PGRepository) GetAlbumsByName(albumName string) ([]models.AlbumFull
 	}
 
 	return result, nil
+}
+
+func (pgrep *PGRepository) CreateAlbum(album models.Album) error {
+	releaseYear := time.Now().Year()
+	if album.Release != 0 {
+		releaseYear = album.Release
+	}
+
+	_, err := pgrep.pgxPool.Exec(context.Background(), `
+		INSERT INTO albums(album_name, release_year)
+		VALUES ($1, $2)
+	`, album.AlbumName, releaseYear)
+
+	if err != nil {
+		return errors.New("cannot insert the album")
+	}
+
+	return nil
+}
+
+func (pgrep *PGRepository) AddTrackInAlbum(trackAlbum models.TrackAlbum) error {
+	req, _ := pgrep.pgxPool.Query(context.Background(), `
+		SELECT * FROM track_album
+		WHERE track_id = $1 AND album_id = $2
+	`, trackAlbum.TrackID, trackAlbum.AlbumID)
+
+	tmp := 0
+	for req.Next() {
+		tmp++
+	}
+
+	if tmp == 0 {
+		_, err := pgrep.pgxPool.Exec(context.Background(), `
+		INSERT INTO track_album(track_id, album_id)
+		VALUES ($1, $2)
+	`, trackAlbum.TrackID, trackAlbum.AlbumID)
+
+		if err != nil {
+			return errors.New("cannot add track in album")
+		}
+	}
+	return nil
 }

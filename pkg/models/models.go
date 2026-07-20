@@ -37,3 +37,18 @@ type ArtistFull struct {
 	Albums     []string `json:"albums_name"`
 	Tracks     []string `json:"tracks_name"`
 }
+
+type TrackAlbum struct {
+	TrackID int `json:"track_id"`
+	AlbumID int `json:"album_id"`
+}
+
+type AlbumArtist struct {
+	AlbumID  int `json:"album_id"`
+	ArtistID int `json:"artist_id"`
+}
+
+type TrackArtist struct {
+	TrackID  int `json:"track_id"`
+	ArtistID int `json:"artist_id"`
+}

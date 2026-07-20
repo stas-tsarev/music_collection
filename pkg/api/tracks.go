@@ -62,7 +62,7 @@ func (api *api) trackByName(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *api) trackAdd(w http.ResponseWriter, r *http.Request) {
-	var track models.TrackFull
+	var track models.Track
 	err := json.NewDecoder(r.Body).Decode(&track)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

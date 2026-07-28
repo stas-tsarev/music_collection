@@ -2,16 +2,23 @@ package main
 
 import (
 	"log"
+	"os"
 	"pr_1_music_collection/pkg/api"
 	"pr_1_music_collection/pkg/repository"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
-const addr = "localhost:8080"
-const conn = "postgres://postgres:s2t0a0s3@localhost:5432/music"
-
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	addr := os.Getenv("ADDR")
+	conn := os.Getenv("POSTGR")
+
 	db, err := repository.NewPGRepository(conn)
 	if err != nil {
 		log.Fatal(err)

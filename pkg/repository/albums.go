@@ -174,3 +174,55 @@ func (pgrep *PGRepository) AddTrackInAlbum(trackAlbum models.TrackAlbum) error {
 	}
 	return nil
 }
+
+func (pgrep *PGRepository) DeleteAlbum(albumID int) error {
+	tx, err := pgrep.pgxPool.Begin(context.Background())
+	if err != nil {
+		return errors.New("cannot begin transaction")
+	}
+	defer tx.Rollback(context.Background())
+
+	commands := []string{
+		"DELETE FROM albums WHERE album_id = $1",
+		"DELETE FROM track_album WHERE album_id = $1",
+		"DELETE FROM album_artist WHERE album_id = $1",
+	}
+
+	for _, command := range commands {
+		if _, err = tx.Exec(context.Background(), command, albumID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(context.Background())
+}
+
+func (pgrep *PGRepository) UpdateAlbum(album models.Album) error {
+	pgrep.mu.Lock()
+	defer pgrep.mu.Unlock()
+
+	var oldAlbum models.Album
+	al := pgrep.pgxPool.QueryRow(context.Background(), `
+		SELECT * FROM albums WHERE album_id = $1;
+	`, album.AlbumID)
+
+	err := al.Scan(&oldAlbum.AlbumID, &oldAlbum.AlbumName, &oldAlbum.Release)
+	if err != nil {
+		return err
+	}
+
+	if oldAlbum.Release <= 0 {
+		oldAlbum.Release = time.Now().Year()
+	}
+
+	if oldAlbum.AlbumName == album.AlbumName && oldAlbum.Release == album.Release {
+		return nil
+	}
+
+	_, err = pgrep.pgxPool.Exec(context.Background(), `
+		UPDATE albums SET album_name = $1, release_year = $2
+		WHERE album_id = $3;
+	`, album.AlbumName, album.Release, album.AlbumID)
+
+	return err
+}

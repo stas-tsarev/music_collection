@@ -145,3 +145,51 @@ func (pgrep *PGRepository) CreateTrack(track models.Track) error {
 
 	return nil
 }
+
+func (pgrep *PGRepository) DeleteTrack(trackID int) error {
+	tx, err := pgrep.pgxPool.Begin(context.Background())
+	if err != nil {
+		return errors.New("cannot begin transaction")
+	}
+	defer tx.Rollback(context.Background())
+
+	commands := []string{
+		"DELETE FROM tracks WHERE track_id = $1",
+		"DELETE FROM track_artist WHERE track_id = $1",
+		"DELETE FROM track_album WHERE track_id = $1",
+	}
+
+	for _, command := range commands {
+		if _, err = tx.Exec(context.Background(), command, trackID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(context.Background())
+}
+
+func (pgrep *PGRepository) UpdateTrack(track models.Track) error {
+	pgrep.mu.Lock()
+	defer pgrep.mu.Unlock()
+
+	var oldTrack models.Track
+	tr := pgrep.pgxPool.QueryRow(context.Background(), `
+		SELECT * FROM tracks WHERE track_id = $1;
+	`, track.TrackID)
+
+	err := tr.Scan(&oldTrack.TrackID, &oldTrack.TrackName)
+	if err != nil {
+		return err
+	}
+
+	if oldTrack.TrackName == track.TrackName {
+		return nil
+	}
+
+	_, err = pgrep.pgxPool.Exec(context.Background(), `
+		UPDATE tracks SET track_name = $1
+		WHERE track_id = $2;
+	`, track.TrackName, track.TrackID)
+
+	return err
+}

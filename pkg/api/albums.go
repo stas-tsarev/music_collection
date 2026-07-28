@@ -90,3 +90,33 @@ func (api *api) albumAddTrack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (api *api) albumDel(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	album_id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.DeleteAlbum(album_id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (api *api) albumUpdate(w http.ResponseWriter, r *http.Request) {
+	var album models.Album
+	err := json.NewDecoder(r.Body).Decode(&album)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.UpdateAlbum(album)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

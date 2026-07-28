@@ -228,3 +228,51 @@ func (pgrep *PGRepository) AddTrackToArtist(trackArtist models.TrackArtist) erro
 
 	return nil
 }
+
+func (pgrep *PGRepository) DeleteArtist(artistID int) error {
+	tx, err := pgrep.pgxPool.Begin(context.Background())
+	if err != nil {
+		return errors.New("cannot begin transaction")
+	}
+	defer tx.Rollback(context.Background())
+
+	commands := []string{
+		"DELETE FROM artists WHERE artist_id = $1",
+		"DELETE FROM track_artist WHERE artist_id = $1",
+		"DELETE FROM album_artist WHERE artist_id = $1",
+	}
+
+	for _, command := range commands {
+		if _, err = tx.Exec(context.Background(), command, artistID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit(context.Background())
+}
+
+func (pgrep *PGRepository) UpdateArtist(artist models.Artist) error {
+	pgrep.mu.Lock()
+	defer pgrep.mu.Unlock()
+
+	var oldArtist models.Artist
+	al := pgrep.pgxPool.QueryRow(context.Background(), `
+		SELECT * FROM artists WHERE artist_id = $1;
+	`, artist.ArtistID)
+
+	err := al.Scan(&oldArtist.ArtistID, &oldArtist.ArtistName)
+	if err != nil {
+		return err
+	}
+
+	if oldArtist.ArtistName == artist.ArtistName {
+		return nil
+	}
+
+	_, err = pgrep.pgxPool.Exec(context.Background(), `
+		UPDATE artists SET artist_name = $1
+		WHERE artist_id = $2;
+	`, artist.ArtistName, artist.ArtistID)
+
+	return err
+}

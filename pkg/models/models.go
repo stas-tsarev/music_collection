@@ -52,3 +52,15 @@ type TrackArtist struct {
 	TrackID  int `json:"track_id"`
 	ArtistID int `json:"artist_id"`
 }
+
+type TrackID struct {
+	TrackID int `json:"track_id"`
+}
+
+type AlbumID struct {
+	AlbumID int `json:"album_id"`
+}
+
+type ArtistID struct {
+	ArtistID int `json:"artist_id"`
+}

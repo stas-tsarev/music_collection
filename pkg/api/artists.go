@@ -105,3 +105,33 @@ func (api *api) artistAddTrack(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (api *api) artistDel(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	artist_id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.DeleteArtist(artist_id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (api *api) artistUpdate(w http.ResponseWriter, r *http.Request) {
+	var artist models.Artist
+	err := json.NewDecoder(r.Body).Decode(&artist)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.UpdateArtist(artist)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

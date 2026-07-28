@@ -75,3 +75,33 @@ func (api *api) trackAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (api *api) trackDel(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	track_id, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.DeleteTrack(track_id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (api *api) trackUpdate(w http.ResponseWriter, r *http.Request) {
+	var track models.Track
+	err := json.NewDecoder(r.Body).Decode(&track)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = api.pgdatabase.UpdateTrack(track)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
